@@ -1,3 +1,11 @@
+# AT Testing Data
+data.tar.gz
+datasets
+
+# IntelliJ IDEA
+.idea
+*.iml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
