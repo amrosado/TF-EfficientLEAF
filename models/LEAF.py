@@ -48,16 +48,17 @@ def mel_filter_params(n_filters: int, min_freq: float, max_freq: float, sample_r
 
 def gabor_filters(size: int, center_freqs: tf.Tensor, sigmas: tf.Tensor) -> tf.Tensor:
     t = tf.range(-(size // 2), (size + 1) // 2, dtype=tf.dtypes.float32)
-    denominator = tf.dtypes.complex(1. / (np.sqrt(2 * np.pi) * sigmas), tf.constant(0., dtype=tf.dtypes.float32))
-    gaussian = tf.dtypes.complex(tf.math.exp(tf.tensordot(1. / (2. * sigmas**2), -t**2, axes=0)), tf.constant(0., dtype=tf.dtypes.float32))
-    outer_product = tf.dtypes.complex(tf.tensordot(center_freqs, t, axes=0), tf.constant(0., dtype=tf.dtypes.float32))
-    sinusoid = tf.math.exp(tf.constant(1j, dtype=tf.dtypes.complex64) * outer_product)
-    return denominator[:, tf.newaxis] * sinusoid * gaussian
+    denominator = tf.dtypes.complex(sigmas * 1. / (np.sqrt(2 * np.pi)), tf.constant(0., dtype=tf.dtypes.float32))
+    gaussian = tf.dtypes.complex(tf.math.exp(tf.tensordot(-t**2, 1. / (2. * sigmas**2), axes=0)), tf.constant(0., dtype=tf.dtypes.float32))
+    outer_product = tf.dtypes.complex(tf.tensordot(t, center_freqs, axes=0), tf.constant(0., dtype=tf.dtypes.float32))
+    sinusoid = tf.math.exp(outer_product * tf.constant(1j, dtype=tf.dtypes.complex64))
+    return denominator[tf.newaxis, :] * sinusoid * gaussian
 
 def gauss_windows(size: int, sigmas: tf.Tensor) -> tf.Tensor:
     t = tf.range(0, size, dtype=tf.dtypes.float32)
-    numerator = t * (2 / (size - 1)) - 1
-    return tf.math.exp(-0.5 * (numerator / sigmas[:, tf.newaxis])**2)
+    numerator = (2 / (size - 1)) * t - 1
+    sigmas = tf.expand_dims(sigmas, axis=1)
+    return tf.transpose(tf.math.exp(-0.5 * (numerator / sigmas)**2))
 
 class PCEN(tf.keras.Model):
     def __init__(self, num_bands: int, s: float=0.025, alpha: float=1.,

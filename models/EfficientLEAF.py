@@ -26,10 +26,10 @@ class LogTBN(tf.keras.Model):
         x = self.log1p(x)
         if self.median_filter:
             if self.append_filtered and len(x.shape) == 3:
-                x = x[:, tf.newaxis]
+                x = tf.expand_dims(x, axis=3)
             m = get_median(x)
             if self.append_filtered:
-                x = tf.concat((x, x - m), axis=1)
+                x = tf.concat((x, x - m), axis=3)
             else:
                 x = x - m
 
@@ -53,7 +53,7 @@ class Log1p(tf.keras.Model):
 
     def call(self, x):
         if self.trainable or self.a != 0:
-            a = self.a[:, tf.newaxis] if self.per_band else self.a
+            a = self.a[tf.newaxis, :] if self.per_band else self.a
             x = 10 ** a * x
         return tf.math.log1p(x)
 
@@ -65,19 +65,19 @@ class TemporalBatchNorm(tf.keras.Model):
                  num_channels: Optional[int] = None):
         super(TemporalBatchNorm, self).__init__()
         num_features = num_bands * num_channels if per_channel else num_bands
-        self.bn = tf.keras.layers.BatchNormalization(center=affine)
+        self.bn = tf.keras.layers.BatchNormalization(axis=1)
         self.per_channel = per_channel
 
     def call(self, x):
         shape = x.shape
         if self.per_channel:
-            x = tf.reshape(x, (x.shape[0], -1 , x.shape[-1]))
+            x = tf.reshape(x, (shape[0], shape[1], -1))
         else:
             x = tf.reshape(x, ((-1,) + x.shape[-2:]))
 
-        x = tf.transpose(x, [0, 2, 1])
+        # x = tf.transpose(x, [0, 2, 1])
         x = self.bn(x)
-        x = tf.transpose(x, [0, 2, 1])
+        # x = tf.transpose(x, [0, 2, 1])
 
         return tf.reshape(x, shape)
 
@@ -176,7 +176,9 @@ class GroupedGaborFilterbank(tf.keras.Model):
             kernel_size = int(np.max(bandwidths[a:b]) * self.conv_win_factor)
             kernel_size += 1 - kernel_size % 2
             kernel = gabor_filters(kernel_size, center_freqs[a:b], bandwidths[a:b])
-            kernel = tf.expand_dims(tf.concat([tf.math.real(kernel), tf.math.imag(kernel)], axis=0), axis=2)
+            # kernel = tf.transpose(kernel)
+            kernel = tf.expand_dims(tf.concat([tf.math.real(kernel), tf.math.imag(kernel)], axis=1), axis=1)
+            # kernel = tf.expand_dims(tf.concat([tf.math.real(kernel), tf.math.imag(kernel)], axis=0), axis=1)
             # kernel_trans = tf.transpose(kernel, [2, 1, 0])
 
             # compute squared modulus
@@ -186,26 +188,26 @@ class GroupedGaborFilterbank(tf.keras.Model):
             # output_ncw = tf.transpose(output, [0, 2, 1])
 
             output = tf.math.square(output)
-            output = output[:, :, :num_group_filters] + output_ncw[:, :, num_group_filters:]
+            output = output[:, :, :num_group_filters] + output[:, :, num_group_filters:]
 
             window_size = int(self.pool_size / conv_stride + .5)
             window_size += 1 - window_size % 2
 
             sigma = self.pooling_widths[a:b]/conv_stride * self.pool_size/window_size
-            windows = tf.expand_dims(gauss_windows(window_size, sigma), axis=2)
-            # windows_trans = tf.transpose(windows, [2, 1, 0])
+            windows = tf.expand_dims(gauss_windows(window_size, sigma), axis=1)
+            windows_trans = tf.transpose(windows, [2, 1, 0])
 
             # output_nwc = tf.transpose(output_ncw, [0, 2, 1])
 
-            group_num = int(output.shape[1] // num_group_filters)
+            group_num = int(output.shape[2] // num_group_filters)
 
             group_output = []
 
             for i in range(group_num):
-                # group_nwc = output_nwc[:, :, i*num_group_filters:(i+1)*num_group_filters]
-                group_nwc = tf.pad(group_nwc, [[0, 0], [0, 0], [window_size//2, window_size//2]])
-                group_output_nwc = tf.nn.conv1d(group_nwc, windows, stride=pool_stride, padding='VALID')
-                group_output.append(group_output_nwc)
+                group = output[:, :, i*num_group_filters:(i+1)*num_group_filters]
+                group = tf.pad(group, [[0, 0], [window_size//2, window_size//2], [0, 0]])
+                group = tf.nn.conv1d(group, windows, stride=pool_stride, padding='VALID')
+                group_output.append(group)
 
             output = tf.concat(group_output, axis=2)
 
@@ -213,7 +215,7 @@ class GroupedGaborFilterbank(tf.keras.Model):
 
             outputs.append(output)
 
-        output = tf.concat(outputs, axis=1)
+        output = tf.concat(outputs, axis=2)
 
         return output
 
@@ -257,7 +259,7 @@ class EfficientLeaf(tf.keras.Model):
 
     def call(self, x: tf.Tensor):
         while len(x.shape) < 3:
-            x = x[:, tf.newaxis]
+            x = tf.expand_dims(x, axis=2)
         x = self.filterbank(x)
         x = self.compression(x)
         return x
