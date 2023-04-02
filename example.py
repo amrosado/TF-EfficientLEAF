@@ -1,10 +1,14 @@
 import math
+import soundfile as sf
 
 import tensorflow as tf
 from tensorflow import keras
 
-from datasets import load_dataset, Audio
 from models.TransformerASR import Transformer
+
+from sequences import HuggingFaceAudioSeq
+
+from datasets import load_dataset, Audio
 
 batch_size = 4
 
@@ -16,37 +20,32 @@ train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=16000)).w
 val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=16000)).with_format("tf")
 test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=16000)).with_format("tf")
 
-# tf_train_dataset = train_dataset.with_format("tensorflow", columns=["file", "text"])
-# tf_val_dataset = val_dataset.with_format("tensorflow", columns=["file", "text"])
-# tf_train_dataset = train_dataset.
 
-class HuggingFaceAudioSequence(keras.utils.Sequence):
-    def __init__(self, huggingface_dataset, batch_size):
-        self.batch_size = batch_size
-        self.hugging_face_dataset = huggingface_dataset
+train_seq = HuggingFaceAudioSeq(train_dataset, batch_size)
+test_seq = HuggingFaceAudioSeq(test_dataset, batch_size)
+val_seq = HuggingFaceAudioSeq(val_dataset, batch_size)
 
-    def __len__(self):
-        return math.ceil(len(self.hugging_face_dataset) / self.batch_size)
+# for i in train_seq:
+#     data = i[0]
+#     audio = i[0][0][0].numpy()
+#     sf.write('stereo_file.wav', audio, 16000, 'PCM_24')
+#     break
 
-    def __getitem__(self, idx):
-        low = idx*self.batch_size
-        high = (idx+1)*self.batch_size
-        audio = []
-        max_len = 0
-        for i in self.hugging_face_dataset[low:high]["audio"]:
-            audio.append(i["array"])
-            if len(i["array"]) > max_len:
-                max_len = len(i["array"])
-        padded_audio = []
-        for i in audio:
-            padded_audio.append(tf.pad(i, [[0, max_len - len(i)]]))
-        text = self.hugging_face_dataset[low:high]["text"]
-
-        return (tf.convert_to_tensor(padded_audio), text), []
-
-train_seq = HuggingFaceAudioSequence(train_dataset, batch_size)
-test_seq = HuggingFaceAudioSequence(test_dataset, batch_size)
-val_seq = HuggingFaceAudioSequence(val_dataset, batch_size)
+# max len = 475760 w/ sr 16000 which is ~30 seconds
+max_len_txt = 0
+max_len_audio = 0
+#
+# for i in train_seq:
+#     data = i[0]
+#     audio_data = data[0]
+#     text_data = data[1]
+#     for j in range(text_data.shape[0]):
+#         audio = audio_data[j].numpy()
+#         text = text_data[j].numpy()
+#         if audio.shape[0] > max_len_audio:
+#             max_len_audio = audio.shape[0]
+#         if len(text) > max_len_txt:
+#             max_len_txt = len(text)
 
 """
 ## Preprocess the dataset
@@ -82,11 +81,11 @@ def create_text_ds(data):
     return text_ds
 
 
-def path_to_audio(path):
+def path_to_audio(audio):
     # spectrogram using stft
-    audio = tf.io.read_file(path)
-    audio, _ = tf.audio.decode_wav(audio, 1)
-    audio = tf.squeeze(audio, axis=-1)
+    # audio = tf.io.read_file(path)
+    # audio, _ = tf.audio.decode_wav(audio, 1)
+    # audio = tf.squeeze(audio, axis=-1)
     stfts = tf.signal.stft(audio, frame_length=200, frame_step=80, fft_length=256)
     x = tf.math.pow(tf.abs(stfts), 0.5)
     # normalisation
@@ -117,7 +116,7 @@ def create_tf_dataset(data, bs=4):
     ds = ds.prefetch(tf.data.AUTOTUNE)
     return ds
 
-max_target_len = 200  # all transcripts in out data are < 200 characters
+max_target_len = 550  # all transcripts in out data are < 200 characters
 # data = get_data(wavs, id_to_text, max_target_len)
 vectorizer = VectorizeChar(max_target_len)
 print("vocab size", len(vectorizer.get_vocabulary()))
@@ -208,6 +207,10 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
 """
 ## Create & train the end-to-end model
 """
+
+for i in train_dataset:
+    # path = i["file"].numpy().decode('utf-8')
+    path_to_audio(i["audio"]["array"])
 
 batch = next(iter(val_dataset))
 

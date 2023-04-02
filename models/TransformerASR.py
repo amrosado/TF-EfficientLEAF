@@ -238,11 +238,11 @@ class Transformer(keras.Model):
         target = inputs[1]
         source = self.frontend(source)
 
-        for i in range(source.shape[0]):
-            fig, ax = plt.subplots()
-            spec = tf.transpose(source[i,:100,:,0])
-            ax.imshow(spec)
-            plt.show()
+        # for i in range(source.shape[0]):
+        #     fig, ax = plt.subplots()
+        #     spec = tf.transpose(source[i,:100,:,0])
+        #     ax.imshow(spec)
+        #     plt.show()
 
         x = self.encoder(source)
         y = self.decode(x, target)
