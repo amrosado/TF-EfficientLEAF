@@ -236,7 +236,7 @@ class Transformer(keras.Model):
     def call(self, inputs):
         source = inputs[0]
         target = inputs[1]
-        source = self.frontend(source)
+        source = self.frontend(source)[:, :, :, 0]
 
         # for i in range(source.shape[0]):
         #     fig, ax = plt.subplots()
@@ -254,8 +254,8 @@ class Transformer(keras.Model):
 
     def train_step(self, batch):
         """Processes one batch inside model.fit()."""
-        source = batch[0][:]
-        target = batch[1][:]
+        source = batch[0][0][:]
+        target = batch[0][1][:]
         dec_input = target[:, :-1]
         dec_target = target[:, 1:]
         with tf.GradientTape() as tape:
@@ -270,8 +270,8 @@ class Transformer(keras.Model):
         return {"loss": self.loss_metric.result()}
 
     def test_step(self, batch):
-        source = batch["source"]
-        target = batch["target"]
+        source = batch[0][0][:]
+        target = batch[0][1][:]
         dec_input = target[:, :-1]
         dec_target = target[:, 1:]
         preds = self([source, dec_input])

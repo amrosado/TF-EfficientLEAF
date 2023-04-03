@@ -11,19 +11,21 @@ from sequences import HuggingFaceAudioSeq
 from datasets import load_dataset, Audio
 
 batch_size = 4
+max_target_len = 600
+sampling_rate = 16000
 
 train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
 test_dataset = load_dataset("librispeech_asr", split='test.clean')
 val_dataset = load_dataset("librispeech_asr", split='validation.clean')
 
-train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=16000)).with_format("tf")
-val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=16000)).with_format("tf")
-test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=16000)).with_format("tf")
+train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
+val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
+test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
 
 
-train_seq = HuggingFaceAudioSeq(train_dataset, batch_size)
-test_seq = HuggingFaceAudioSeq(test_dataset, batch_size)
-val_seq = HuggingFaceAudioSeq(val_dataset, batch_size)
+train_seq = HuggingFaceAudioSeq(train_dataset, batch_size=batch_size, sr=sampling_rate, max_target_len=max_target_len)
+test_seq = HuggingFaceAudioSeq(test_dataset, batch_size=batch_size, sr=sampling_rate, max_target_len=max_target_len)
+val_seq = HuggingFaceAudioSeq(val_dataset, batch_size=batch_size, sr=sampling_rate, max_target_len=max_target_len)
 
 # for i in train_seq:
 #     data = i[0]
@@ -51,34 +53,13 @@ max_len_audio = 0
 ## Preprocess the dataset
 """
 
-class VectorizeChar:
-    def __init__(self, max_len=50):
-        self.vocab = (
-                ["-", "#", "<", ">"]
-                + [chr(i + 96) for i in range(1, 27)]
-                + [" ", ".", ",", "?"]
-        )
-        self.max_len = max_len
-        self.char_to_idx = {}
-        for i, ch in enumerate(self.vocab):
-            self.char_to_idx[ch] = i
-
-    def __call__(self, text):
-        text = text.lower()
-        text = text[: self.max_len - 2]
-        text = "<" + text + ">"
-        pad_len = self.max_len - len(text)
-        return [self.char_to_idx.get(ch, 1) for ch in text] + [0] * pad_len
-
-    def get_vocabulary(self):
-        return self.vocab
 
 
-def create_text_ds(data):
-    texts = [_["text"] for _ in data]
-    text_ds = [vectorizer(t) for t in texts]
-    text_ds = tf.data.Dataset.from_tensor_slices(text_ds)
-    return text_ds
+# def create_text_ds(data):
+#     texts = [_["text"] for _ in data]
+#     text_ds = [vectorizer(t) for t in texts]
+#     text_ds = tf.data.Dataset.from_tensor_slices(text_ds)
+#     return text_ds
 
 
 def path_to_audio(audio):
@@ -107,19 +88,14 @@ def create_audio_ds(data):
     return audio_ds
 
 
-def create_tf_dataset(data, bs=4):
-    audio_ds = create_audio_ds(data)
-    text_ds = create_text_ds(data)
-    ds = tf.data.Dataset.zip((audio_ds, text_ds))
-    ds = ds.map(lambda x, y: {"source": x, "target": y})
-    ds = ds.batch(bs)
-    ds = ds.prefetch(tf.data.AUTOTUNE)
-    return ds
-
-max_target_len = 550  # all transcripts in out data are < 200 characters
-# data = get_data(wavs, id_to_text, max_target_len)
-vectorizer = VectorizeChar(max_target_len)
-print("vocab size", len(vectorizer.get_vocabulary()))
+# def create_tf_dataset(data, bs=4):
+#     audio_ds = create_audio_ds(data)
+#     text_ds = create_text_ds(data)
+#     ds = tf.data.Dataset.zip((audio_ds, text_ds))
+#     ds = ds.map(lambda x, y: {"source": x, "target": y})
+#     ds = ds.batch(bs)
+#     ds = ds.prefetch(tf.data.AUTOTUNE)
+#     return ds
 
 """
 ## Callbacks to display predictions
@@ -146,8 +122,8 @@ class DisplayOutputs(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if epoch % 5 != 0:
             return
-        source = self.batch["source"]
-        target = self.batch["target"].numpy()
+        source = self.batch[0][0][:]
+        target = self.batch[0][1][:]
         bs = tf.shape(source)[0]
         preds = self.model.generate(source, self.target_start_token_idx)
         preds = preds.numpy()
@@ -208,14 +184,14 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
 ## Create & train the end-to-end model
 """
 
-for i in train_dataset:
-    # path = i["file"].numpy().decode('utf-8')
-    path_to_audio(i["audio"]["array"])
+# for i in train_dataset:
+#     # path = i["file"].numpy().decode('utf-8')
+#     path_to_audio(i["audio"]["array"])
 
 batch = next(iter(val_dataset))
 
 # The vocabulary to convert predicted indices into characters
-idx_to_char = vectorizer.get_vocabulary()
+idx_to_char = train_seq.vectorizer.get_vocabulary()
 display_cb = DisplayOutputs(
     batch, idx_to_char, target_start_token_idx=2, target_end_token_idx=3
 )  # set the arguments as per vocabulary index for '<' and '>'
@@ -245,7 +221,12 @@ learning_rate = CustomSchedule(
 optimizer = keras.optimizers.Adam(learning_rate)
 model.compile(optimizer=optimizer, loss=loss_fn)
 
-history = model.fit(train_seq, validation_data=val_seq, callbacks=[display_cb], epochs=1)
+model_callbacks = [
+    display_cb,
+    tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5')
+]
+
+history = model.fit(train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30)
 
 pass
 

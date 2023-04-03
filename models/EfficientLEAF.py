@@ -183,9 +183,7 @@ class GroupedGaborFilterbank(tf.keras.Model):
 
             # compute squared modulus
             output = tf.pad(x, [[0,0], [kernel_size // 2, kernel_size // 2], [0,0]])
-            # output_nwc = tf.transpose(output, [0, 2, 1])
             output = tf.nn.conv1d(output, kernel, stride=float(conv_stride), padding='VALID')
-            # output_ncw = tf.transpose(output, [0, 2, 1])
 
             output = tf.math.square(output)
             output = output[:, :, :num_group_filters] + output[:, :, num_group_filters:]
@@ -196,8 +194,6 @@ class GroupedGaborFilterbank(tf.keras.Model):
             sigma = self.pooling_widths[a:b]/conv_stride * self.pool_size/window_size
             windows = tf.expand_dims(gauss_windows(window_size, sigma), axis=1)
             windows_trans = tf.transpose(windows, [2, 1, 0])
-
-            # output_nwc = tf.transpose(output_ncw, [0, 2, 1])
 
             group_num = int(output.shape[2] // num_group_filters)
 
@@ -262,4 +258,5 @@ class EfficientLeaf(tf.keras.Model):
             x = tf.expand_dims(x, axis=2)
         x = self.filterbank(x)
         x = self.compression(x)
+        # Output in n_minibatch * time * n_filter * n_channel
         return x
