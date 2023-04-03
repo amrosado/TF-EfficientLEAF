@@ -1,6 +1,9 @@
-# AT Testing Data
+# AI Testing Data
 data.tar.gz
 sequences/LJSpeech-1.1
+
+# AI logs for tensorboard
+logs
 
 # IntelliJ IDEA
 .idea

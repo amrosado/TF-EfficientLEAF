@@ -221,9 +221,13 @@ learning_rate = CustomSchedule(
 optimizer = keras.optimizers.Adam(learning_rate)
 model.compile(optimizer=optimizer, loss=loss_fn)
 
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5')
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
+
 model_callbacks = [
     display_cb,
-    tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5')
+    model_checkpoint_callback,
+    tensorboard_callback
 ]
 
 history = model.fit(train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30)
