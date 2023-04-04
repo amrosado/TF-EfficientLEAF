@@ -127,7 +127,7 @@ class GroupedGaborFilterbank(tf.keras.Model):
         self.possible_strides = [i for i in range(1, pool_stride+1) if pool_stride % i == 0]
 
         self.center_freqs = self.add_weight('grouped_gabor_center_freqs', shape=n_filters, initializer=MelFilterCenterFreqs(n_filters, min_freq, max_freq, sample_rate), trainable=True, dtype=tf.dtypes.float32)
-        self.bandwidths = self.add_weight('grouped_gabor_center_freqs', shape=n_filters, initializer=MelFilterBandwidths(n_filters, min_freq, max_freq, sample_rate), trainable=True, dtype=tf.dtypes.float32)
+        self.bandwidths = self.add_weight('grouped_gabor_bandwidths', shape=n_filters, initializer=MelFilterBandwidths(n_filters, min_freq, max_freq, sample_rate), trainable=True, dtype=tf.dtypes.float32)
         self.pooling_widths = self.add_weight('grouped_gabor_pooling', shape=n_filters, initializer=tf.keras.initializers.Constant(pool_init), trainable=True, dtype=tf.dtypes.float32)
 
         self.mu_lower = tf.constant(0.)
@@ -145,7 +145,7 @@ class GroupedGaborFilterbank(tf.keras.Model):
         stride = tf.maximum(1., np.pi / cent_freq * self.stride_factor)
         tf_poss = tf.constant(self.possible_strides, dtype=tf.float32)
         search_sorted = tf.searchsorted(tf_poss, [stride], side='right')[0]
-        stride = tf.gather(tf_poss, search_sorted - 1).numpy()
+        stride = float(tf.gather(tf_poss, search_sorted - 1))
         return stride, self.pool_stride // stride
 
     def clamp_parameters(self):
@@ -173,13 +173,10 @@ class GroupedGaborFilterbank(tf.keras.Model):
 
             # complex convolution
             ## compute filters
-            kernel_size = int(np.max(bandwidths[a:b]) * self.conv_win_factor)
+            kernel_size = int(tf.math.reduce_max(bandwidths[a:b]) * self.conv_win_factor)
             kernel_size += 1 - kernel_size % 2
             kernel = gabor_filters(kernel_size, center_freqs[a:b], bandwidths[a:b])
-            # kernel = tf.transpose(kernel)
             kernel = tf.expand_dims(tf.concat([tf.math.real(kernel), tf.math.imag(kernel)], axis=1), axis=1)
-            # kernel = tf.expand_dims(tf.concat([tf.math.real(kernel), tf.math.imag(kernel)], axis=0), axis=1)
-            # kernel_trans = tf.transpose(kernel, [2, 1, 0])
 
             # compute squared modulus
             output = tf.pad(x, [[0,0], [kernel_size // 2, kernel_size // 2], [0,0]])
@@ -193,7 +190,6 @@ class GroupedGaborFilterbank(tf.keras.Model):
 
             sigma = self.pooling_widths[a:b]/conv_stride * self.pool_size/window_size
             windows = tf.expand_dims(gauss_windows(window_size, sigma), axis=1)
-            windows_trans = tf.transpose(windows, [2, 1, 0])
 
             group_num = int(output.shape[2] // num_group_filters)
 
@@ -206,8 +202,6 @@ class GroupedGaborFilterbank(tf.keras.Model):
                 group_output.append(group)
 
             output = tf.concat(group_output, axis=2)
-
-            # output_ncw = tf.transpose(output_nwc, [0, 2, 1])
 
             outputs.append(output)
 

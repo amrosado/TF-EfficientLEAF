@@ -4,6 +4,7 @@ sequences/LJSpeech-1.1
 
 # AI logs for tensorboard
 logs
+saved_models
 
 # IntelliJ IDEA
 .idea

@@ -283,6 +283,7 @@ class Transformer(keras.Model):
 
     def generate(self, source, target_start_token_idx):
         """Performs inference over one batch of inputs using greedy decoding."""
+        source = self.frontend(source)[:, :, :, 0]
         bs = tf.shape(source)[0]
         enc = self.encoder(source)
         dec_input = tf.ones((bs, 1), dtype=tf.int32) * target_start_token_idx

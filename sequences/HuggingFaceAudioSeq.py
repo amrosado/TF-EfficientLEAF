@@ -30,7 +30,7 @@ class VectorizeChar:
         return self.vocab
 
 class HuggingFaceAudioSeq(keras.utils.Sequence):
-    def __init__(self, huggingface_dataset, batch_size, sr=16000, max_audio_len_s=30, max_target_len=600):
+    def __init__(self, huggingface_dataset, batch_size, sr=16000, max_audio_len_s=35, max_target_len=600):
         self.batch_size = batch_size
         self.hugging_face_dataset = huggingface_dataset
         # 16000 sample rate times 30s
@@ -41,7 +41,6 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
 
     def __len__(self):
         return math.ceil(len(self.hugging_face_dataset) / self.batch_size)
-
     def __getitem__(self, idx):
         low = idx*self.batch_size
         high = (idx+1)*self.batch_size

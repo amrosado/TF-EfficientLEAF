@@ -1,5 +1,5 @@
-import math
-import soundfile as sf
+import os
+from datetime import datetime
 
 import tensorflow as tf
 from tensorflow import keras
@@ -11,43 +11,46 @@ from sequences import HuggingFaceAudioSeq
 from datasets import load_dataset, Audio
 
 batch_size = 4
+max_audio_len_s = 35
 max_target_len = 600
 sampling_rate = 16000
+
+# all_dataset = load_dataset("librispeech_asr")
 
 train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
 test_dataset = load_dataset("librispeech_asr", split='test.clean')
 val_dataset = load_dataset("librispeech_asr", split='validation.clean')
-
+#
 train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
 val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
 test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
 
 
-train_seq = HuggingFaceAudioSeq(train_dataset, batch_size=batch_size, sr=sampling_rate, max_target_len=max_target_len)
-test_seq = HuggingFaceAudioSeq(test_dataset, batch_size=batch_size, sr=sampling_rate, max_target_len=max_target_len)
-val_seq = HuggingFaceAudioSeq(val_dataset, batch_size=batch_size, sr=sampling_rate, max_target_len=max_target_len)
+train_seq = HuggingFaceAudioSeq(train_dataset, batch_size=batch_size, sr=sampling_rate,
+                                max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
+test_seq = HuggingFaceAudioSeq(test_dataset, batch_size=batch_size, sr=sampling_rate,
+                               max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
+val_seq = HuggingFaceAudioSeq(val_dataset, batch_size=batch_size, sr=sampling_rate,
+                              max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
 
-# for i in train_seq:
-#     data = i[0]
-#     audio = i[0][0][0].numpy()
-#     sf.write('stereo_file.wav', audio, 16000, 'PCM_24')
-#     break
+# train max_len_audio = 475760, max_len_text=524
+# test max_len_audio = 559280, max_len_text = 576
+# val max_len_audio = 522320, max_len_text = 516
 
-# max len = 475760 w/ sr 16000 which is ~30 seconds
-max_len_txt = 0
-max_len_audio = 0
+# max len = 559280 w/ sr 16000 which is ~35 seconds
 #
-# for i in train_seq:
-#     data = i[0]
-#     audio_data = data[0]
-#     text_data = data[1]
-#     for j in range(text_data.shape[0]):
-#         audio = audio_data[j].numpy()
-#         text = text_data[j].numpy()
-#         if audio.shape[0] > max_len_audio:
-#             max_len_audio = audio.shape[0]
-#         if len(text) > max_len_txt:
-#             max_len_txt = len(text)
+# for i in val_dataset:
+#     audio = i["audio"]
+#     text = i["text"]
+#     array = audio["array"]
+#
+#     if array.shape[0] > max_len_audio:
+#         max_len_audio = array.shape[0]
+#
+#     if len(text) > max_len_txt:
+#         max_len_txt = len(text)
+
+
 
 """
 ## Preprocess the dataset
@@ -165,14 +168,14 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
         """linear warm up - linear decay"""
         warmup_lr = (
                 self.init_lr
-                + ((self.lr_after_warmup - self.init_lr) / (self.warmup_epochs - 1)) * epoch
+                + ((self.lr_after_warmup - self.init_lr) / (self.warmup_epochs - 1)) * float(epoch)
         )
         decay_lr = tf.math.maximum(
             self.final_lr,
             self.lr_after_warmup
-            - (epoch - self.warmup_epochs)
+            - (float(epoch) - self.warmup_epochs)
             * (self.lr_after_warmup - self.final_lr)
-            / (self.decay_epochs),
+            / (float(self.decay_epochs)),
             )
         return tf.math.minimum(warmup_lr, decay_lr)
 
@@ -188,7 +191,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
 #     # path = i["file"].numpy().decode('utf-8')
 #     path_to_audio(i["audio"]["array"])
 
-batch = next(iter(val_dataset))
+batch = val_seq[0]
 
 # The vocabulary to convert predicted indices into characters
 idx_to_char = train_seq.vectorizer.get_vocabulary()
@@ -221,7 +224,12 @@ learning_rate = CustomSchedule(
 optimizer = keras.optimizers.Adam(learning_rate)
 model.compile(optimizer=optimizer, loss=loss_fn)
 
-model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5')
+current_time = datetime.now()
+output_dir = os.path.join('saved_models', '{}'.format(current_time.strftime("%Y%m%d_%H%M%S")))
+os.makedirs(output_dir, exist_ok=True)
+model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
+
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
 
 model_callbacks = [
