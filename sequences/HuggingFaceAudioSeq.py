@@ -57,6 +57,6 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
             text = self.vectorizer(text)
             vec_texts.append(text)
 
-        return (tf.convert_to_tensor(padded_audios), tf.convert_to_tensor(vec_texts)), []
+        return {"source": tf.convert_to_tensor(padded_audios), "target": tf.convert_to_tensor(vec_texts)}
 
 
