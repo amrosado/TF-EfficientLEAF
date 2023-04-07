@@ -197,7 +197,14 @@ class GroupedGaborFilterbank(tf.keras.Model):
 
             for i in range(group_num):
                 group = output[:, :, i*num_group_filters:(i+1)*num_group_filters]
-                group = tf.pad(group, [[0, 0], [window_size//2, window_size//2], [0, 0]])
+                try:
+                    group = tf.pad(group, [[0, 0], [window_size//2, window_size//2], [0, 0]])
+                except Exception as a:
+                    print("Group shape {}".format(group.shape))
+                    print("Window size {}".format(window_size))
+                    print("Window size // 2 {}".format(window_size // 2))
+                    print(a)
+                    exit(9999)
                 group = tf.nn.conv1d(group, windows, stride=pool_stride, padding='VALID')
                 group_output.append(group)
 

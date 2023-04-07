@@ -228,7 +228,7 @@ current_time = datetime.now()
 output_dir = os.path.join('saved_models', '{}'.format(current_time.strftime("%Y%m%d_%H%M%S")))
 os.makedirs(output_dir, exist_ok=True)
 model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
-model_load_path = os.path.join('saved_models', '20230404_074018', 'model.03-0.46.h5')
+model_load_path = os.path.join('saved_models', '20230405_054817', 'model.16-0.21.h5')
 
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
@@ -244,7 +244,7 @@ first_input = [train_seq[0]["source"], train_seq[0]["target"]]
 model(first_input)
 model.load_weights(model_load_path)
 
-history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30, initial_epoch=4)
+history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30, initial_epoch=16)
 
 pass
 
