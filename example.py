@@ -10,7 +10,12 @@ from sequences import HuggingFaceAudioSeq
 
 from datasets import load_dataset, Audio
 
+# Set environmental variables for computer the code will run in
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["HF_DATASETS_CACHE"] = '/opt/localdata/Data/laryn/hugging_face'
+
+# Specify shared dataset configuration values that will be used for train, test, and validation
 
 batch_size = 4
 max_audio_len_s = 35
