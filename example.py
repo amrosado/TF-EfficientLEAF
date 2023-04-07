@@ -10,6 +10,8 @@ from sequences import HuggingFaceAudioSeq
 
 from datasets import load_dataset, Audio
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+
 batch_size = 4
 max_audio_len_s = 35
 max_target_len = 600
