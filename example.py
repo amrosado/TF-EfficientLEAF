@@ -13,9 +13,9 @@ from datasets import load_dataset, Audio
 # Set environmental variables for computer the code will run in
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
-os.environ["HF_HOME"] = '/opt/localdata/Data/laryn/hugging_face/'
-
-print(os.environ["HF_HOME"])
+# os.environ["HF_HOME"] = '/opt/localdata/Data/laryn/hugging_face/'
+#
+# print(os.environ["HF_HOME"])
 
 # os.environ["HF_DATASETS_DOWNLOADED_DATASETS_PATH"] = '/opt/localdata/Data/laryn/hugging_face/downloads'
 
@@ -28,11 +28,11 @@ sampling_rate = 16000
 
 # all_dataset = load_dataset("librispeech_asr")
 
-# hugging_face_cache_dir = os.path.join('opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
+hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
 
-train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
-test_dataset = load_dataset("librispeech_asr", split='test.clean')
-val_dataset = load_dataset("librispeech_asr", split='validation.clean')
+train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
+test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
+val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
 #
 train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
 val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
