@@ -1,6 +1,10 @@
 import os
 from datetime import datetime
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["HF_DATASETS_CACHE"] = '/opt/localdata/Data/laryn/hugging_face/cache'
+os.environ["HF_DATASETS_DOWNLOADED_DATASETS_PATH"] = '/opt/localdata/Data/laryn/hugging_face/downloads'
+
 import tensorflow as tf
 from tensorflow import keras
 
@@ -11,10 +15,6 @@ from sequences import HuggingFaceAudioSeq
 from datasets import load_dataset, Audio
 
 # Set environmental variables for computer the code will run in
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
-os.environ["HF_DATASETS_CACHE"] = '/opt/localdata/Data/laryn/hugging_face/cache'
-os.environ["HF_DATASETS_DOWNLOADED_DATASETS_PATH"] = '/opt/localdata/Data/laryn/hugging_face/downloads'
 
 # Specify shared dataset configuration values that will be used for train, test, and validation
 
