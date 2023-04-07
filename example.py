@@ -12,7 +12,7 @@ from datasets import load_dataset, Audio
 
 # Set environmental variables for computer the code will run in
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ['CUDA_VISIBLE_DEVICES'] = '7'
 # os.environ["HF_HOME"] = '/opt/localdata/Data/laryn/hugging_face/'
 #
 # print(os.environ["HF_HOME"])
