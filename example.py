@@ -4,8 +4,8 @@ from datetime import datetime
 import tensorflow as tf
 from tensorflow import keras
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '7'
-print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
+# os.environ['CUDA_VISIBLE_DEVICES'] = '7'
+# print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
 
 from models.TransformerASR import Transformer
 
@@ -26,18 +26,22 @@ def main():
 
     # Specify shared dataset configuration values that will be used for train, test, and validation
 
-    batch_size = 20
+    batch_size = 4
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000
 
     # all_dataset = load_dataset("librispeech_asr")
 
-    hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
+    # hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
+    #
+    # train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
+    # test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
+    # val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
 
-    train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
-    test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
-    val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
+    train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
+    test_dataset = load_dataset("librispeech_asr", split='test.clean')
+    val_dataset = load_dataset("librispeech_asr", split='validation.clean')
     #
     train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
     val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
@@ -246,7 +250,7 @@ def main():
     output_dir = os.path.join('saved_models', '{}'.format(current_time.strftime("%Y%m%d_%H%M%S")))
     os.makedirs(output_dir, exist_ok=True)
     model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
-    model_load_path = os.path.join('saved_models', '20230407_104034', 'model.17-0.20.h5')
+    model_load_path = os.path.join('saved_models', '20230407_104034', 'model.18-0.20.h5')
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
