@@ -262,7 +262,7 @@ def main():
     model(first_input)
     model.load_weights(model_load_path)
 
-    history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30, initial_epoch=18, shuffle=True)
+    history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30, initial_epoch=18)
 
     pass
 

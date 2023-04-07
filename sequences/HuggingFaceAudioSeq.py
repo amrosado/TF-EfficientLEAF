@@ -1,4 +1,5 @@
 import math
+import random
 
 import tensorflow as tf
 from tensorflow import keras
@@ -37,18 +38,27 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
         self.max_len = sr * max_audio_len_s
         self.max_target_len = max_target_len  # all transcripts in out data are < 550 characters
         self.vectorizer = VectorizeChar(self.max_target_len)
+        self.indexes = [i for i in range(len(huggingface_dataset)//batch_size)]
+        random.shuffle(self.indexes)
         print("Vocab size for vectorizer", len(self.vectorizer.get_vocabulary()))
 
     def __len__(self):
-        return math.ceil(len(self.hugging_face_dataset) / self.batch_size)
+        return len(self.indexes)
+
+    def on_epoch_end(self):
+        random.shuffle(self.indexes)
     def __getitem__(self, idx):
-        low = idx*self.batch_size
-        high = (idx+1)*self.batch_size
-        # max len = 475760 w/ sr 16000 which is ~30 seconds
+        i = self.indexes[idx]
+
+        low = i*self.batch_size
+        high = (i+1)*self.batch_size
+        # max len = 475760 w/ sr 16000 which is ~35 seconds
         padded_audios = []
         vec_texts = []
+
         items = self.hugging_face_dataset[low:high]["audio"]
         texts = self.hugging_face_dataset[low:high]["text"]
+
         for i in items:
             padded_audios.append(tf.pad(i["array"], [[0, self.max_len - i["array"].shape[0]]]))
 
