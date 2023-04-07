@@ -10,8 +10,6 @@ from sequences import HuggingFaceAudioSeq
 
 from datasets import load_dataset, Audio
 
-dataset.cleanup_cache_files()
-
 # Set environmental variables for computer the code will run in
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
