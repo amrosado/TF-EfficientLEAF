@@ -4,8 +4,8 @@ from datetime import datetime
 import tensorflow as tf
 from tensorflow import keras
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '7'
-# print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
+os.environ['CUDA_VISIBLE_DEVICES'] = '7'
+print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
 
 from models.TransformerASR import Transformer
 
@@ -33,15 +33,15 @@ def main():
 
     # all_dataset = load_dataset("librispeech_asr")
 
-    # hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
-    #
-    # train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
-    # test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
-    # val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
+    hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
 
-    train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
-    test_dataset = load_dataset("librispeech_asr", split='test.clean')
-    val_dataset = load_dataset("librispeech_asr", split='validation.clean')
+    train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
+    test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
+    val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
+
+    # train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
+    # test_dataset = load_dataset("librispeech_asr", split='test.clean')
+    # val_dataset = load_dataset("librispeech_asr", split='validation.clean')
     #
     train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
     val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
