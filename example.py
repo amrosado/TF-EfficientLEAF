@@ -230,6 +230,7 @@ def main():
         num_layers_dec=1,
         num_classes=34,
     )
+
     loss_fn = tf.keras.losses.CategoricalCrossentropy(
         from_logits=True,
         label_smoothing=0.1,
