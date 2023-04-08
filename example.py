@@ -4,7 +4,7 @@ from datetime import datetime
 import tensorflow as tf
 from tensorflow import keras
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '7'
+os.environ['CUDA_VISIBLE_DEVICES'] = '6'
 print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
 
 from models.TransformerASR import Transformer
