@@ -262,10 +262,11 @@ def main():
         tensorboard_callback
     ]
 
-    first_input = [train_seq[0]["source"], train_seq[0]["target"]]
+    with tf.device('/GPU:0'):
+        first_input = [train_seq[0]["source"], train_seq[0]["target"]]
 
-    model(first_input)
-    model.load_weights(model_load_path)
+        model(first_input)
+        model.load_weights(model_load_path)
 
     history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30, initial_epoch=18)
 
