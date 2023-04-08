@@ -234,8 +234,7 @@ class Transformer(keras.Model):
         return y
 
     def call(self, inputs):
-        source = inputs[0]
-        target = inputs[1]
+        source, target = inputs
         source = self.frontend(source)[:, :, :, 0]
 
         # for i in range(source.shape[0]):
@@ -254,27 +253,26 @@ class Transformer(keras.Model):
 
     def train_step(self, batch):
         """Processes one batch inside model.fit()."""
-        source = batch[0]["source"]
-        target = batch[0]["target"]
+        x = batch[0]
+        source = x["source"]
+        target = x["target"]
         dec_input = target[:, :-1]
         dec_target = target[:, 1:]
         with tf.GradientTape() as tape:
-            preds = self([source, dec_input])
+            preds = self((source, dec_input))
             one_hot = tf.one_hot(dec_target, depth=self.num_classes)
             mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
             loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        if len(gradients) != len(trainable_vars):
-            print("Gradients and trainable vars unequal lengths")
-            exit(9999)
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
 
     def test_step(self, batch):
-        source = batch[0]["source"][:]
-        target = batch[0]["target"][:]
+        x = batch[0]
+        source = x["source"]
+        target = x["target"]
         dec_input = target[:, :-1]
         dec_target = target[:, 1:]
         preds = self([source, dec_input])
