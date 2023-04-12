@@ -35,7 +35,6 @@ import random
 from glob import glob
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
 
 from models.EfficientLEAF import EfficientLeaf
 
@@ -57,7 +56,7 @@ class TokenEmbedding(layers.Layer):
     def __init__(self, num_vocab=1000, maxlen=100, num_hid=64):
         super().__init__()
         self.emb = tf.keras.layers.Embedding(num_vocab, num_hid)
-        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
+        self.pos_emb = tf.keras.layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
         maxlen = tf.shape(x)[-1]
@@ -67,7 +66,7 @@ class TokenEmbedding(layers.Layer):
         return x + positions
 
 
-class SpeechFeatureEmbedding(layers.Layer):
+class SpeechFeatureEmbedding(tf.keras.layers.Layer):
     def __init__(self, num_hid=64, maxlen=100):
         super().__init__()
         self.conv1 = tf.keras.layers.Conv1D(
@@ -79,7 +78,7 @@ class SpeechFeatureEmbedding(layers.Layer):
         self.conv3 = tf.keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
+        self.pos_emb = tf.keras.layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
         x = self.conv1(x)
@@ -92,20 +91,20 @@ class SpeechFeatureEmbedding(layers.Layer):
 """
 
 
-class TransformerEncoder(layers.Layer):
+class TransformerEncoder(tf.keras.layers.Layer):
     def __init__(self, embed_dim, num_heads, feed_forward_dim, rate=0.1):
         super().__init__()
-        self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.att = tf.keras.layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         self.ffn = keras.Sequential(
             [
-                layers.Dense(feed_forward_dim, activation="relu"),
-                layers.Dense(embed_dim),
+                tf.keras.layers.Dense(feed_forward_dim, activation="relu"),
+                tf.keras.layers.Dense(embed_dim),
             ]
         )
-        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
-        self.dropout1 = layers.Dropout(rate)
-        self.dropout2 = layers.Dropout(rate)
+        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.dropout1 = tf.keras.layers.Dropout(rate)
+        self.dropout2 = tf.keras.layers.Dropout(rate)
 
     def call(self, inputs, training):
         attn_output = self.att(inputs, inputs)
@@ -121,23 +120,23 @@ class TransformerEncoder(layers.Layer):
 """
 
 
-class TransformerDecoder(layers.Layer):
+class TransformerDecoder(tf.keras.layers.Layer):
     def __init__(self, embed_dim, num_heads, feed_forward_dim, dropout_rate=0.1):
         super().__init__()
-        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm3 = layers.LayerNormalization(epsilon=1e-6)
-        self.self_att = layers.MultiHeadAttention(
+        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm3 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.self_att = tf.keras.layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embed_dim
         )
-        self.enc_att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
-        self.self_dropout = layers.Dropout(0.5)
-        self.enc_dropout = layers.Dropout(0.1)
-        self.ffn_dropout = layers.Dropout(0.1)
+        self.enc_att = tf.keras.layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.self_dropout = tf.keras.layers.Dropout(0.5)
+        self.enc_dropout = tf.keras.layers.Dropout(0.1)
+        self.ffn_dropout = tf.keras.layers.Dropout(0.1)
         self.ffn = keras.Sequential(
             [
-                layers.Dense(feed_forward_dim, activation="relu"),
-                layers.Dense(embed_dim),
+                tf.keras.layers.Dense(feed_forward_dim, activation="relu"),
+                tf.keras.layers.Dense(embed_dim),
             ]
         )
 
@@ -225,7 +224,7 @@ class Transformer(keras.Model):
                 TransformerDecoder(num_hid, num_head, num_feed_forward),
             )
 
-        self.classifier = layers.Dense(num_classes)
+        self.classifier = tf.keras.layers.Dense(num_classes)
 
     def decode(self, enc_out, target):
         y = self.dec_input(target)
@@ -266,6 +265,14 @@ class Transformer(keras.Model):
             loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
+
+        if len(trainable_vars) != len(gradients):
+            for i in range(len(trainable_vars)):
+                print("Trainable vars {}".format(trainable_vars[i]))
+
+            for i in range(len(gradients)):
+                print("Gradients {}".format(gradients[i]))
+
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
