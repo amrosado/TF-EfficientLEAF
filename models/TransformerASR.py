@@ -276,7 +276,9 @@ class Transformer(keras.Model):
 
             self.optimizer.apply_gradients(zip(gradients, trainable_vars, strict=False))
         except:
-            print("Length of loss {}".format(len(loss)))
+            print("Length of preds {}".format(preds.shape))
+            print("Length of mask {}".format(mask.shape))
+            print("Length of loss {}".format(loss.shape))
             print("Length of trainable vars {}".format(len(trainable_vars)))
             print("Length of gradients {}".format(len(gradients)))
 
