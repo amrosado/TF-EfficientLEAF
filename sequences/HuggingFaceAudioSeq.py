@@ -2,6 +2,7 @@ import math
 import random
 
 import tensorflow as tf
+import numpy as np
 from tensorflow import keras
 
 """
@@ -53,20 +54,22 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
         low = i*self.batch_size
         high = (i+1)*self.batch_size
         # max len = 475760 w/ sr 16000 which is ~35 seconds
-        padded_audios = []
-        vec_texts = []
 
-        items = self.hugging_face_dataset[low:high]["audio"]
+        audios = self.hugging_face_dataset[low:high]["audio"]
         texts = self.hugging_face_dataset[low:high]["text"]
 
-        for i in items:
-            padded_audios.append(tf.pad(i["array"], [[0, self.max_len - i["array"].shape[0]]]))
+        source = []
+        target = []
 
-        for i in texts:
-            text = i.numpy().decode("utf-8")
-            text = self.vectorizer(text)
-            vec_texts.append(text)
+        for i in range(len(audios)):
+            audio_array = tf.convert_to_tensor(audios[i]["array"], dtype=tf.float32)
+            text = self.vectorizer(texts[i])
+            source.append(tf.pad(audio_array, [[0, self.max_len - audio_array.shape[0]]]))
+            target.append(tf.convert_to_tensor(text))
 
-        return {"source": tf.convert_to_tensor(padded_audios), "target": tf.convert_to_tensor(vec_texts)}
+        return {"source": tf.stack(source), "target": tf.stack(target)}
+
+
+
 
 

@@ -36,7 +36,7 @@ def main():
 
     # Specify shared dataset configuration values that will be used for train, test, and validation
 
-    batch_size = 40
+    batch_size = 4
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000
@@ -53,9 +53,9 @@ def main():
     # test_dataset = load_dataset("librispeech_asr", split='test.clean')
     # val_dataset = load_dataset("librispeech_asr", split='validation.clean')
     #
-    train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
-    val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
-    test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate)).with_format("tf")
+    train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate))
+    val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate))
+    test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate))
 
 
     train_seq = HuggingFaceAudioSeq(train_dataset, batch_size=batch_size, sr=sampling_rate,
