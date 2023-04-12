@@ -266,14 +266,21 @@ class Transformer(keras.Model):
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
 
-        if len(trainable_vars) != len(gradients):
-            for i in range(len(trainable_vars)):
-                print("Trainable vars {}".format(trainable_vars[i]))
+        try:
+            if len(trainable_vars) != len(gradients):
+                for i in range(len(trainable_vars)):
+                    print("Trainable vars {}".format(trainable_vars[i]))
 
-            for i in range(len(gradients)):
-                print("Gradients {}".format(gradients[i]))
+                for i in range(len(gradients)):
+                    print("Gradients {}".format(gradients[i]))
 
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+            self.optimizer.apply_gradients(zip(gradients, trainable_vars, strict=False))
+        except:
+            print("Length of loss {}".format(len(loss)))
+            print("Length of trainable vars {}".format(len(trainable_vars)))
+            print("Length of gradients {}".format(len(gradients)))
+
+
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
 
