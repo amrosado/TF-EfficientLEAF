@@ -4,14 +4,24 @@ from datetime import datetime
 import tensorflow as tf
 from tensorflow import keras
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '6'
-print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
-
 from models.TransformerASR import Transformer
 
 from sequences import HuggingFaceAudioSeq
 
 from datasets import load_dataset, Audio
+
+"""
+Set environmental variables that are specific to running code on GPU server
+"""
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
+
+os.environ["XLA_FLAGS"] = "--xla_gpu_cuda_data_dir=/usr/lib/cuda"
+print("Set XLA_FLAGS for CUDA = {}".format(os.environ["XLA_FLAGS"])
+
+os.environ['TF_XLA_FLAGS'] = "--tf_xla_enable_xla_devices"
+print("Set TF_XLA_FLAGS for TF = {}".format(os.environ["TF_XLA_FLAGS"])
 
 def main():
 
@@ -26,7 +36,7 @@ def main():
 
     # Specify shared dataset configuration values that will be used for train, test, and validation
 
-    batch_size = 4
+    batch_size = 40
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000
@@ -251,7 +261,7 @@ def main():
     output_dir = os.path.join('saved_models', '{}'.format(current_time.strftime("%Y%m%d_%H%M%S")))
     os.makedirs(output_dir, exist_ok=True)
     model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
-    model_load_path = os.path.join('saved_models', '20230407_104034', 'model.18-0.20.h5')
+    model_load_path = os.path.join('saved_models', '20230412_080256', 'model.19-0.20.h5')
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
