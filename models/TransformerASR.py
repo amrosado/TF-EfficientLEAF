@@ -52,7 +52,7 @@ them (via convolution stides) and process local relationships.
 """
 
 
-class TokenEmbedding(layers.Layer):
+class TokenEmbedding(tf.keras.layers.Layer):
     def __init__(self, num_vocab=1000, maxlen=100, num_hid=64):
         super().__init__()
         self.emb = tf.keras.layers.Embedding(num_vocab, num_hid)
