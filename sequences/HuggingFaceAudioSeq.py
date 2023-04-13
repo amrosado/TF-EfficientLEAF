@@ -64,8 +64,9 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
         for i in range(len(audios)):
             audio_array = tf.convert_to_tensor(audios[i]["array"], dtype=tf.float32)
             text = self.vectorizer(texts[i])
+            text = tf.pad(text, [[0, self.max_target_len - text.shape[0]]])
             source.append(tf.pad(audio_array, [[0, self.max_len - audio_array.shape[0]]]))
-            target.append(tf.convert_to_tensor(text))
+            target.append(text)
 
         return {"source": tf.stack(source), "target": tf.stack(target)}
 
