@@ -14,14 +14,14 @@ from datasets import load_dataset, Audio
 Set environmental variables that are specific to running code on GPU server
 """
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '6'
-# print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
-#
-# os.environ["XLA_FLAGS"] = "--xla_gpu_cuda_data_dir=/usr/lib/cuda"
-# print("Set XLA_FLAGS for CUDA = {}".format(os.environ["XLA_FLAGS"]))
-#
-# os.environ['TF_XLA_FLAGS'] = "--tf_xla_enable_xla_devices"
-# print("Set TF_XLA_FLAGS for TF = {}".format(os.environ["TF_XLA_FLAGS"]))
+os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
+
+os.environ["XLA_FLAGS"] = "--xla_gpu_cuda_data_dir=/usr/lib/cuda"
+print("Set XLA_FLAGS for CUDA = {}".format(os.environ["XLA_FLAGS"]))
+
+os.environ['TF_XLA_FLAGS'] = "--tf_xla_enable_xla_devices"
+print("Set TF_XLA_FLAGS for TF = {}".format(os.environ["TF_XLA_FLAGS"]))
 
 def main():
 
