@@ -38,7 +38,7 @@ class LogTBN(tf.keras.Model):
         return x
 
 class Log1p(tf.keras.Model):
-    def __init__(self, a=0, trainable=False, per_band=False, num_bands=None):
+    def __init__(self, a:float=0, trainable=False, per_band=False, num_bands=None):
         super(Log1p, self).__init__()
 
         if trainable:
@@ -46,7 +46,7 @@ class Log1p(tf.keras.Model):
             if not per_band:
                 a = tf.Tensor(a, dtype=dtype)
             else:
-                a = self.add_weight('Log1p_a', shape=num_bands, initializer=tf.keras.initializers.Constant(a), trainable=True)
+                a = self.add_weight('Log1p_a', shape=num_bands, initializer=tf.keras.initializers.Constant(a, dtype=tf.float32), trainable=True)
         self.a = a
         self.trainable = trainable
         self.per_band = per_band
@@ -75,9 +75,7 @@ class TemporalBatchNorm(tf.keras.Model):
         else:
             x = tf.reshape(x, ((-1,) + x.shape[-2:]))
 
-        # x = tf.transpose(x, [0, 2, 1])
         x = self.bn(x)
-        # x = tf.transpose(x, [0, 2, 1])
 
         return tf.reshape(x, shape)
 
