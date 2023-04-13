@@ -59,7 +59,7 @@ class TokenEmbedding(tf.keras.layers.Layer):
         self.pos_emb = tf.keras.layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
-        maxlen = tf.shape(x)[-1]
+        maxlen = x.shape[-1]
         x = self.emb(x)
         positions = tf.range(start=0, limit=maxlen, delta=1)
         positions = self.pos_emb(positions)
@@ -274,7 +274,7 @@ class Transformer(keras.Model):
                 for i in range(len(gradients)):
                     print("Gradients {}".format(gradients[i]))
 
-            self.optimizer.apply_gradients(zip(gradients, trainable_vars, strict=False))
+            self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         except:
             print("Length of preds {}".format(preds.shape))
             print("Length of mask {}".format(mask.shape))
