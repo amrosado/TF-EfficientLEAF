@@ -251,7 +251,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
     # model_load_path = os.path.join('saved_models', '20230412_080256', 'model.19-0.20.h5')
-    model_load_path = os.path.join('saved_models', '20230407_104034', 'model.18-0.20.h5')
+    model_load_path = os.path.join('saved_models', '20230412_213134', 'model.30-0.19.h5')
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
@@ -268,7 +268,7 @@ def main():
         model(first_input)
         model.load_weights(model_load_path)
 
-    history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=30, initial_epoch=18)
+    history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=100, initial_epoch=30)
 
     pass
 
