@@ -36,7 +36,7 @@ def main():
 
     # Specify shared dataset configuration values that will be used for train, test, and validation
 
-    batch_size = 4
+    batch_size = 40
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000
