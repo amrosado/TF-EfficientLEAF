@@ -36,7 +36,7 @@ def main():
 
     # Specify shared dataset configuration values that will be used for train, test, and validation
 
-    batch_size = 40
+    batch_size = 4
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000
@@ -44,7 +44,7 @@ def main():
     # all_dataset = load_dataset("librispeech_asr")
 
     hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
-    #
+
     train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
     test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
     val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
@@ -64,62 +64,6 @@ def main():
                                    max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
     val_seq = HuggingFaceAudioSeq(val_dataset, batch_size=batch_size, sr=sampling_rate,
                                   max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
-
-    # train max_len_audio = 475760, max_len_text=524
-    # test max_len_audio = 559280, max_len_text = 576
-    # val max_len_audio = 522320, max_len_text = 516
-
-    # max len = 559280 w/ sr 16000 which is ~35 seconds
-
-
-
-    """
-    ## Preprocess the dataset
-    """
-
-
-
-    # def create_text_ds(data):
-    #     texts = [_["text"] for _ in data]
-    #     text_ds = [vectorizer(t) for t in texts]
-    #     text_ds = tf.data.Dataset.from_tensor_slices(text_ds)
-    #     return text_ds
-
-
-    def path_to_audio(audio):
-        # spectrogram using stft
-        # audio = tf.io.read_file(path)
-        # audio, _ = tf.audio.decode_wav(audio, 1)
-        # audio = tf.squeeze(audio, axis=-1)
-        stfts = tf.signal.stft(audio, frame_length=200, frame_step=80, fft_length=256)
-        x = tf.math.pow(tf.abs(stfts), 0.5)
-        # normalisation
-        means = tf.math.reduce_mean(x, 1, keepdims=True)
-        stddevs = tf.math.reduce_std(x, 1, keepdims=True)
-        x = (x - means) / stddevs
-        audio_len = tf.shape(x)[0]
-        # padding to 10 seconds
-        pad_len = 2754
-        paddings = tf.constant([[0, pad_len], [0, 0]])
-        x = tf.pad(x, paddings, "CONSTANT")[:pad_len, :]
-        return x
-
-
-    def create_audio_ds(data):
-        flist = [_["audio"] for _ in data]
-        audio_ds = tf.data.Dataset.from_tensor_slices(flist)
-        audio_ds = audio_ds.map(path_to_audio, num_parallel_calls=tf.data.AUTOTUNE)
-        return audio_ds
-
-
-    # def create_tf_dataset(data, bs=4):
-    #     audio_ds = create_audio_ds(data)
-    #     text_ds = create_text_ds(data)
-    #     ds = tf.data.Dataset.zip((audio_ds, text_ds))
-    #     ds = ds.map(lambda x, y: {"source": x, "target": y})
-    #     ds = ds.batch(bs)
-    #     ds = ds.prefetch(tf.data.AUTOTUNE)
-    #     return ds
 
     """
     ## Callbacks to display predictions
@@ -250,8 +194,8 @@ def main():
     output_dir = os.path.join('saved_models', '{}'.format(current_time.strftime("%Y%m%d_%H%M%S")))
     os.makedirs(output_dir, exist_ok=True)
     model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
-    # model_load_path = os.path.join('saved_models', '20230412_080256', 'model.19-0.20.h5')
-    model_load_path = os.path.join('saved_models', '20230412_213134', 'model.30-0.19.h5')
+    model_load_path = os.path.join('saved_models', '20230407_104034', 'model.18-0.20.h5')
+    # model_load_path = os.path.join('saved_models', '20230412_213134', 'model.30-0.19.h5')
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")

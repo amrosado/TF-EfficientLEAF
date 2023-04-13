@@ -46,7 +46,7 @@ class Log1p(tf.keras.Model):
             if not per_band:
                 a = tf.Tensor(a, dtype=dtype)
             else:
-                a = self.add_weight('Log1p_a', shape=num_bands, initializer=tf.keras.initializers.Constant(a, dtype=tf.float32), trainable=True)
+                a = self.add_weight('Log1p_a', shape=num_bands, initializer=tf.keras.initializers.Constant(a), trainable=True)
         self.a = a
         self.trainable = trainable
         self.per_band = per_band

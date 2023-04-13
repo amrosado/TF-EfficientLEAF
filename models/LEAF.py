@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from typing import Optional
 
+@tf.function
 def return_peaks_mel(n_filters, min_freq, max_freq):
     min_mel = 1127 * tf.math.log1p(min_freq / 700.0)
     max_mel = 1127 * tf.math.log1p(max_freq / 700.0)
@@ -36,6 +37,7 @@ class MelFilterBandwidths(tf.keras.initializers.Initializer):
 
         return sigmas
 
+@tf.function
 def mel_filter_params(n_filters: int, min_freq: float, max_freq: float, sample_rate: int) -> (tf.Tensor, tf.Tensor):
     min_mel = 1127 * tf.math.log1p(min_freq / 700.0)
     max_mel = 1127 * tf.math.log1p(min_freq / 700.0)
@@ -46,6 +48,7 @@ def mel_filter_params(n_filters: int, min_freq: float, max_freq: float, sample_r
     sigmas = (sample_rate / 2.) / bandwidths
     return center_freqs, sigmas
 
+@tf.function
 def gabor_filters(size: int, center_freqs: tf.Tensor, sigmas: tf.Tensor) -> tf.Tensor:
     t = tf.range(-(size // 2), (size + 1) // 2, dtype=tf.dtypes.float32)
     denominator = tf.dtypes.complex(sigmas * 1. / (np.sqrt(2 * np.pi)), tf.constant(0., dtype=tf.dtypes.float32))
@@ -54,6 +57,7 @@ def gabor_filters(size: int, center_freqs: tf.Tensor, sigmas: tf.Tensor) -> tf.T
     sinusoid = tf.math.exp(outer_product * tf.constant(1j, dtype=tf.dtypes.complex64))
     return denominator[tf.newaxis, :] * sinusoid * gaussian
 
+@tf.function
 def gauss_windows(size: int, sigmas: tf.Tensor) -> tf.Tensor:
     t = tf.range(0, size, dtype=tf.dtypes.float32)
     numerator = (2 / (size - 1)) * t - 1
