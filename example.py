@@ -43,8 +43,8 @@ def main():
 
     # all_dataset = load_dataset("librispeech_asr")
 
-    hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
-
+    # hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
+    #
     train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
     test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
     val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
@@ -70,17 +70,6 @@ def main():
     # val max_len_audio = 522320, max_len_text = 516
 
     # max len = 559280 w/ sr 16000 which is ~35 seconds
-    #
-    # for i in val_dataset:
-    #     audio = i["audio"]
-    #     text = i["text"]
-    #     array = audio["array"]
-    #
-    #     if array.shape[0] > max_len_audio:
-    #         max_len_audio = array.shape[0]
-    #
-    #     if len(text) > max_len_txt:
-    #         max_len_txt = len(text)
 
 
 

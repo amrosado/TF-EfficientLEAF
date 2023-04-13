@@ -14,7 +14,7 @@ class VectorizeChar:
         self.vocab = (
                 ["-", "#", "<", ">"]
                 + [chr(i + 96) for i in range(1, 27)]
-                + [" ", ".", ",", "?"]
+                + [" ", ".", ",", "?", "'"]
         )
         self.max_len = max_len
         self.char_to_idx = {}
@@ -26,7 +26,7 @@ class VectorizeChar:
         text = text[: self.max_len - 2]
         text = "<" + text + ">"
         pad_len = self.max_len - len(text)
-        return [self.char_to_idx.get(ch, 1) for ch in text] + [0] * pad_len
+        return [self.char_to_idx[ch] for ch in text] + [0] * pad_len
 
     def get_vocabulary(self):
         return self.vocab
@@ -64,7 +64,7 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
         for i in range(len(audios)):
             audio_array = tf.convert_to_tensor(audios[i]["array"], dtype=tf.float32)
             text = self.vectorizer(texts[i])
-            text = tf.pad(text, [[0, self.max_target_len - len(text)]])
+            # text = tf.pad(text, [[0, self.max_target_len - len(text)]])
             source.append(tf.pad(audio_array, [[0, self.max_len - audio_array.shape[0]]]))
             target.append(text)
 
