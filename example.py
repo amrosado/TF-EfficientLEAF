@@ -185,6 +185,9 @@ def main():
     model_load_path = os.path.join('saved_models', 'latest_model.h5')
     load_saved_model(model, model_load_path, train_seq)
 
+    # Print output
+    display_cb.on_epoch_end(0)
+
     history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=100, initial_epoch=0)
 
     model.evaluate(x=test_seq)

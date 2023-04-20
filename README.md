@@ -29,7 +29,7 @@ to the TensorFlow community.
 
 ## Example eLEAF output
 
-![Example eLEAF Output](https://github.com/amrosado/TF-EfficientLEAF/blob/initial_commit/example_output/eLEAF/eleaf_example_10.png?raw=true)
+![Example eLEAF Output](https://github.com/amrosado/TF-EfficientLEAF/blob/aaron/initial_commit/example_output/eLEAF/eleaf_example_10.png?raw=true)
 
 ## Example Automatic Speech Recognition Transformer Output
 

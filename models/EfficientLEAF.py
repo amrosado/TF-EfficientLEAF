@@ -261,8 +261,7 @@ class EfficientLeaf(tf.keras.Model):
         x = self.compression(x)
         # Output in n_minibatch * time * n_filter * n_channel
 
-        graph_spectrogram(x)
-
-        exit(710)
+        # Uncomment below to test spectrogram-like output
+        # graph_spectrogram(x)
 
         return x
