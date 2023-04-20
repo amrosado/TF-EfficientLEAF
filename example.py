@@ -25,7 +25,7 @@ def main():
     Setup datasets in a keras sequence.  Can change dataset name to other huggingface ASR dataset.
     """
 
-    batch_size = 4
+    batch_size = 40
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000

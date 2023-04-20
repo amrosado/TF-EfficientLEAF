@@ -6,6 +6,8 @@ from models.LEAF import mel_filter_params, gabor_filters, gauss_windows
 from models.LEAF import PCEN
 from models.LEAF import MelFilterBandwidths, MelFilterCenterFreqs
 
+from helpers.vis_helpers import graph_spectrogram
+
 import matplotlib
 
 def get_median(v):
@@ -258,5 +260,9 @@ class EfficientLeaf(tf.keras.Model):
         x = self.filterbank(x)
         x = self.compression(x)
         # Output in n_minibatch * time * n_filter * n_channel
+
+        graph_spectrogram(x)
+
+        exit(710)
 
         return x

@@ -12,3 +12,4 @@ def graph_spectrogram(batch_spectogram):
         plt.xlabel('Time')
         plt.ylabel('Frequency Filter')
         plt.title('Efficient LEAF Example #{}'.format(i))
+        plt.savefig('eleaf_example_{}.png'.format(i))
