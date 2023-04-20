@@ -5,65 +5,37 @@ import tensorflow as tf
 from tensorflow import keras
 
 from models.TransformerASR import Transformer
-
-from sequences import HuggingFaceAudioSeq
-
-from datasets import load_dataset, Audio
+from helpers.train_helpers import create_keras_seq, set_gpu_server_env_var, load_saved_model
 
 """
-Set environmental variables that are specific to running code on GPU server
+EfficientLEAF implementation example in tensorflow using Keras TransfomerASR example.
+
+Tested on both windows and linux using tensorflow 2.10.x and 2.12.x.
+
 """
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '6'
-print("Set target devices for CUDA {}".format(os.environ['CUDA_VISIBLE_DEVICES']))
-
-os.environ["XLA_FLAGS"] = "--xla_gpu_cuda_data_dir=/usr/lib/cuda"
-print("Set XLA_FLAGS for CUDA = {}".format(os.environ["XLA_FLAGS"]))
-
-os.environ['TF_XLA_FLAGS'] = "--tf_xla_enable_xla_devices"
-print("Set TF_XLA_FLAGS for TF = {}".format(os.environ["TF_XLA_FLAGS"]))
 
 def main():
+    """
+    Set environmental variables specific for the code to run on.
+    Uncomment if desired to run on specific GPU.
+    set_gpu_server_env_var('6')
+    """
 
-    # Set environmental variables for computer the code will run in
+    """
+    Setup datasets in a keras sequence.  Can change dataset name to other huggingface ASR dataset.
+    """
 
-
-    # os.environ["HF_HOME"] = '/opt/localdata/Data/laryn/hugging_face/'
-    #
-    # print(os.environ["HF_HOME"])
-
-    # os.environ["HF_DATASETS_DOWNLOADED_DATASETS_PATH"] = '/opt/localdata/Data/laryn/hugging_face/downloads'
-
-    # Specify shared dataset configuration values that will be used for train, test, and validation
-
-    batch_size = 40
+    batch_size = 4
     max_audio_len_s = 35
     max_target_len = 600
     sampling_rate = 16000
 
-    # all_dataset = load_dataset("librispeech_asr")
-
-    hugging_face_cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
-
-    train_dataset = load_dataset("librispeech_asr", split='train.clean.360', cache_dir=hugging_face_cache_dir)
-    test_dataset = load_dataset("librispeech_asr", split='test.clean', cache_dir=hugging_face_cache_dir)
-    val_dataset = load_dataset("librispeech_asr", split='validation.clean', cache_dir=hugging_face_cache_dir)
-
-    # train_dataset = load_dataset("librispeech_asr", split='train.clean.360')
-    # test_dataset = load_dataset("librispeech_asr", split='test.clean')
-    # val_dataset = load_dataset("librispeech_asr", split='validation.clean')
-    #
-    train_dataset = train_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate))
-    val_dataset = val_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate))
-    test_dataset = test_dataset.cast_column("audio", Audio(sampling_rate=sampling_rate))
-
-
-    train_seq = HuggingFaceAudioSeq(train_dataset, batch_size=batch_size, sr=sampling_rate,
-                                    max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
-    test_seq = HuggingFaceAudioSeq(test_dataset, batch_size=batch_size, sr=sampling_rate,
-                                   max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
-    val_seq = HuggingFaceAudioSeq(val_dataset, batch_size=batch_size, sr=sampling_rate,
-                                  max_audio_len_s=max_audio_len_s, max_target_len=max_target_len)
+    train_seq = create_keras_seq("librispeech_asr", "train.clean",
+                                 batch_size, sampling_rate, max_audio_len_s, max_target_len)
+    test_seq = create_keras_seq("librispeech_asr", "test.clean",
+                                batch_size, sampling_rate, max_audio_len_s, max_target_len)
+    val_seq = create_keras_seq("librispeech_asr", "test.clean",
+                                batch_size, sampling_rate, max_audio_len_s, max_target_len)
 
     """
     ## Callbacks to display predictions
@@ -152,10 +124,6 @@ def main():
     ## Create & train the end-to-end model
     """
 
-    # for i in train_dataset:
-    #     # path = i["file"].numpy().decode('utf-8')
-    #     path_to_audio(i["audio"]["array"])
-
     batch = val_seq[0]
 
     # The vocabulary to convert predicted indices into characters
@@ -185,17 +153,19 @@ def main():
         final_lr=0.00001,
         warmup_epochs=15,
         decay_epochs=85,
-        steps_per_epoch=len(train_dataset),
+        steps_per_epoch=len(train_seq) // batch_size,
     )
     optimizer = keras.optimizers.Adam(learning_rate)
     model.compile(optimizer=optimizer, loss=loss_fn)
+
+    # Save models every epoch
 
     current_time = datetime.now()
     output_dir = os.path.join('saved_models', '{}'.format(current_time.strftime("%Y%m%d_%H%M%S")))
     os.makedirs(output_dir, exist_ok=True)
     model_output_path = os.path.join(output_dir, 'model.{epoch:02d}-{val_loss:.2f}.h5')
-    # model_load_path = os.path.join('saved_models', '20230407_104034', 'model.18-0.20.h5')
-    model_load_path = os.path.join('saved_models', '20230413_063745', 'model.36-0.19.h5')
+
+
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=model_output_path, save_weights_only=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
@@ -206,15 +176,14 @@ def main():
         tensorboard_callback
     ]
 
-    with tf.device('/GPU:0'):
-        first_input = (train_seq[0]["source"], train_seq[0]["target"])
+    # Load saved model
 
-        model(first_input)
-        model.load_weights(model_load_path)
+    model_load_path = os.path.join('saved_models', 'latest_model.h5')
+    load_saved_model(model, model_load_path, train_seq)
 
-    history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=100, initial_epoch=36)
+    history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=100, initial_epoch=0)
 
-    pass
+    model.evaluate(x=test_seq)
 
     """
     In practice, you should train for around 100 epochs or more.

@@ -3,7 +3,7 @@
 ## About
 This repository aims to reproduce the Efficient LEAF front-end model using TensorFlow 
 and Keras towards enabling learnable audio frontends in TensorFlow without using Gin 
-and Lingvo dependencies limiting the compatibility of the original LEAF library. The 
+and Lingvo dependencies limiting the usability and compatibility of the original LEAF library. The 
 code heavily reproduces the original code featured in the EUSIPCO EfficientLEAF: 
 A Faster Learnable Audio Frontend of Questionable Use published by Jan Schlüter 
 and Gerald Gutenbrunner (https://arxiv.org/abs/2207.05508).  The original GitHub 
@@ -15,8 +15,18 @@ to the TensorFlow community.
 
 ## Tested with:
 * Python 3.9
-* Tensorflow 2.10
+* Tensorflow 2.10.x (Windows) and Tensorflow 2.12.x (Linux)
 
 ## Using:
-* Nvidia CUDA 11.2.2
-* Nvidia CUDNN 8.1.0.77
+* Nvidia CUDA >=11.2.2
+* Nvidia CUDNN >=8.1.0.77
+
+## Dependencies:
+* Tensorflow 2
+* Huggingface Datasets
+* Librosa
+* Soundfile
+
+## Example eLEAF output
+
+## Example Automatic Speech Recognition Transformer Output 

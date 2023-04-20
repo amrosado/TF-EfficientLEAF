@@ -258,4 +258,5 @@ class EfficientLeaf(tf.keras.Model):
         x = self.filterbank(x)
         x = self.compression(x)
         # Output in n_minibatch * time * n_filter * n_channel
+
         return x
