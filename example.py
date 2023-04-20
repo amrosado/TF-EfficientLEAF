@@ -63,13 +63,18 @@ def main():
             self.target_end_token_idx = target_end_token_idx
             self.idx_to_char = idx_to_token
 
-        def on_epoch_end(self, epoch, logs=None):
+        def on_epoch_end(self, epoch, model=None, logs=None):
             if epoch % 5 != 0:
                 return
             source = self.batch["source"]
             target = self.batch["target"]
             bs = tf.shape(source)[0]
-            preds = self.model.generate(source, self.target_start_token_idx)
+
+            if model is None:
+                preds = self.model.generate(source, self.target_start_token_idx)
+            else:
+                preds = model.generate(source, self.target_start_token_idx)
+
             preds = preds.numpy()
             for i in range(bs):
                 target_text = "".join([self.idx_to_char[_] for _ in target[i, :]])
@@ -186,7 +191,7 @@ def main():
     load_saved_model(model, model_load_path, train_seq)
 
     # Print output
-    display_cb.on_epoch_end(0)
+    display_cb.on_epoch_end(0, model)
 
     history = model.fit(x=train_seq, validation_data=val_seq, callbacks=model_callbacks, epochs=100, initial_epoch=0)
 
