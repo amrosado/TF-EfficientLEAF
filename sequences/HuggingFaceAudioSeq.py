@@ -39,7 +39,7 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
         self.max_len = sr * max_audio_len_s
         self.max_target_len = max_target_len  # all transcripts in out data are < 550 characters
         self.vectorizer = VectorizeChar(self.max_target_len)
-        self.indexes = [i for i in range(huggingface_dataset.num_rows//batch_size)]
+        self.indexes = [i for i in range(huggingface_dataset.num_rows)]
         random.shuffle(self.indexes)
         print("Vocab size for vectorizer", len(self.vectorizer.get_vocabulary()))
 
@@ -49,13 +49,10 @@ class HuggingFaceAudioSeq(keras.utils.Sequence):
     def on_epoch_end(self):
         random.shuffle(self.indexes)
     def __getitem__(self, idx):
-        i = self.indexes[idx]
+        idxs = self.indexes[idx:(idx+self.batch_size)]
 
-        low = i*self.batch_size
-        high = (i+1)*self.batch_size
-
-        audios = self.hugging_face_dataset[low:high]["audio"]
-        texts = self.hugging_face_dataset[low:high]["text"]
+        audios = self.hugging_face_dataset[idxs]["audio"]
+        texts = self.hugging_face_dataset[idxs]["text"]
 
         source = []
         target = []
