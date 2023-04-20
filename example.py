@@ -30,12 +30,14 @@ def main():
     max_target_len = 600
     sampling_rate = 16000
 
+    cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
+
     train_seq = create_keras_seq("librispeech_asr", "train.clean",
-                                 batch_size, sampling_rate, max_audio_len_s, max_target_len)
+                                 batch_size, sampling_rate, max_audio_len_s, max_target_len, cache_dir)
     test_seq = create_keras_seq("librispeech_asr", "test.clean",
-                                batch_size, sampling_rate, max_audio_len_s, max_target_len)
+                                batch_size, sampling_rate, max_audio_len_s, max_target_len, cache_dir)
     val_seq = create_keras_seq("librispeech_asr", "test.clean",
-                                batch_size, sampling_rate, max_audio_len_s, max_target_len)
+                                batch_size, sampling_rate, max_audio_len_s, max_target_len, cache_dir)
 
     """
     ## Callbacks to display predictions
