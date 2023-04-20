@@ -6,8 +6,8 @@ from matplotlib import pyplot as plt
 
 def graph_spectrogram(batch_spectogram):
     for i in range(batch_spectogram.shape[0]):
-        # show only first 500 given long file hard to appreciate.
-        comp_spec = batch_spectogram[i,:500,:,0]
+        # show only first 100 given long file hard to appreciate.
+        comp_spec = batch_spectogram[i,:100,:,0]
         comp_spec = tf.transpose(comp_spec, (1, 0))
         plt.imshow(comp_spec.numpy())
         plt.xlabel('Time')
