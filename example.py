@@ -14,6 +14,8 @@ Tested on both windows and linux using tensorflow 2.10.x and 2.12.x.
 
 """
 
+set_gpu_server_env_var()
+
 def main():
     """
     Set environmental variables specific for the code to run on.
