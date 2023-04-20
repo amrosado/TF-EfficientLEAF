@@ -32,7 +32,7 @@ def main():
 
     cache_dir = os.path.join('/opt', 'localdata', 'Data', 'laryn', 'hugging_face', 'cache')
 
-    train_seq = create_keras_seq("librispeech_asr", "train.clean",
+    train_seq = create_keras_seq("librispeech_asr", "train.clean.360",
                                  batch_size, sampling_rate, max_audio_len_s, max_target_len, cache_dir)
     test_seq = create_keras_seq("librispeech_asr", "test.clean",
                                 batch_size, sampling_rate, max_audio_len_s, max_target_len, cache_dir)
